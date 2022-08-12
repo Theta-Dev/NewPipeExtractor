@@ -74,6 +74,7 @@ public final class StringUtils {
                     break;
                 case '\'':
                 case '"':
+                case '`':
                     if (!lastEscaped) {
                         if (quote == ' ') {
                             quote = c;
