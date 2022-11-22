@@ -49,7 +49,7 @@ public class YoutubeFeedExtractorTest {
         }
 
         @Test
-        public void testId() {
+        public void testId() throws ParsingException {
             assertEquals("UCsXVk37bltHxD1rDPwtNM8Q", extractor.getId());
         }
 

@@ -11,6 +11,7 @@ import org.schabi.newpipe.extractor.downloader.Downloader;
 import org.schabi.newpipe.extractor.downloader.Response;
 import org.schabi.newpipe.extractor.exceptions.ContentNotAvailableException;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
+import org.schabi.newpipe.extractor.exceptions.ParsingException;
 import org.schabi.newpipe.extractor.feed.FeedExtractor;
 import org.schabi.newpipe.extractor.linkhandler.ListLinkHandler;
 import org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper;
@@ -56,8 +57,17 @@ public class YoutubeFeedExtractor extends FeedExtractor {
 
     @Nonnull
     @Override
-    public String getId() {
-        return document.getElementsByTag("yt:channelId").first().text();
+    public String getId() throws ParsingException {
+        final String channelId = document.getElementsByTag("yt:channelId").first().text();
+        if (!channelId.isEmpty()) {
+            return channelId;
+        }
+
+        final String channelUrl = getUrl();
+        if (channelUrl.startsWith("https://www.youtube.com/channel/")) {
+            return channelUrl.substring(32);
+        }
+        throw new ParsingException("could not extract channel id");
     }
 
     @Nonnull
