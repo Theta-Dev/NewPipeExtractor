@@ -18,6 +18,7 @@ import org.schabi.newpipe.extractor.localization.ContentCountry;
 import org.schabi.newpipe.extractor.localization.Localization;
 import org.schabi.newpipe.extractor.playlist.PlaylistExtractor;
 import org.schabi.newpipe.extractor.search.SearchExtractor;
+import org.schabi.newpipe.extractor.services.youtube.extractors.YouTubeSlowFeedExtractor;
 import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeChannelExtractor;
 import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeChannelTabExtractor;
 import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeCommentsExtractor;
@@ -182,6 +183,12 @@ public class YoutubeService extends StreamingService {
     @Override
     public FeedExtractor getFeedExtractor(final String channelUrl) throws ExtractionException {
         return new YoutubeFeedExtractor(this, getChannelLHFactory().fromUrl(channelUrl));
+    }
+
+    @Nonnull
+    @Override
+    public FeedExtractor getSlowFeedExtractor(final String channelUrl) throws ExtractionException {
+        return new YouTubeSlowFeedExtractor(this, getChannelLHFactory().fromUrl(channelUrl));
     }
 
     @Override

@@ -164,7 +164,7 @@ public final class YouTubeChannelHelper {
      * @param jsonResponse channel JSON response
      * @throws ContentNotAvailableException if the channel was not found
      */
-    private static void checkIfChannelResponseIsValid(@Nonnull final JsonObject jsonResponse)
+    public static void checkIfChannelResponseIsValid(@Nonnull final JsonObject jsonResponse)
             throws ContentNotAvailableException {
         if (!isNullOrEmpty(jsonResponse.getObject("error"))) {
             final JsonObject errorJsonObject = jsonResponse.getObject("error");

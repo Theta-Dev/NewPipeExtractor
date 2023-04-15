@@ -61,6 +61,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -203,6 +204,14 @@ public final class YoutubeParsingHelper {
     private static final String[] HARDCODED_YOUTUBE_MUSIC_KEY =
             {"AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30", "67", "1.20220808.01.00"};
     private static String[] youtubeMusicKey;
+
+    public static final String YOUTUBE_TV_URL = "https://www.youtube.com/tv";
+    @SuppressWarnings("LineLength")
+    private static final String YOUTUBE_TV_USER_AGENT =
+            "Mozilla/5.0 (SMART-TV; LINUX; Tizen 5.5) AppleWebKit/537.36 (KHTML, like Gecko) 69.0.3497.106.1/5.5 TV Safari/537.36";
+    private static final String[] HARDCODED_YOUTUBE_TV_KEY =
+            {"AIzaSyDCU8hByM-4DrUqRUYnGn-3llEO78bcxq8", "7.20230412.04.00"};
+    private static String[] youtubeTvKey;
 
     private static boolean keyAndVersionExtracted = false;
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
@@ -443,7 +452,7 @@ public final class YoutubeParsingHelper {
     /**
      * @param playlistId the playlist id to parse
      * @return the {@link PlaylistInfo.PlaylistType} extracted from the playlistId (mix playlist
-     *         types included)
+     * types included)
      * @throws ParsingException if the playlistId is null or empty, if the playlistId is not a mix,
      *                          if it is a mix but it's not based on a specific stream (this is the
      *                          case for channel or genre mixes)
@@ -476,7 +485,7 @@ public final class YoutubeParsingHelper {
                 // 11 characters then it can't be a video id, hence we are dealing with a different
                 // type of mix (e.g. genre mixes handled above, of the form RDGMEM{garbage})
                 throw new ParsingException("Video id could not be determined from mix id: "
-                    + playlistId);
+                        + playlistId);
             }
             return playlistId.substring(2);
 
@@ -489,7 +498,7 @@ public final class YoutubeParsingHelper {
     /**
      * @param playlistId the playlist id to parse
      * @return the {@link PlaylistInfo.PlaylistType} extracted from the playlistId (mix playlist
-     *         types included)
+     * types included)
      * @throws ParsingException if the playlistId is null or empty
      */
     @Nonnull
@@ -517,7 +526,7 @@ public final class YoutubeParsingHelper {
     /**
      * @param playlistUrl the playlist url to parse
      * @return the {@link PlaylistInfo.PlaylistType} extracted from the playlistUrl's list param
-     *         (mix playlist types included)
+     * (mix playlist types included)
      * @throws ParsingException if the playlistUrl is malformed, if has no list param or if the list
      *                          param is empty
      */
@@ -644,14 +653,14 @@ public final class YoutubeParsingHelper {
             throw new ParsingException(
                     // CHECKSTYLE:OFF
                     "Could not extract YouTube WEB InnerTube API key from HTML search results page");
-                    // CHECKSTYLE:ON
+            // CHECKSTYLE:ON
         }
 
         if (clientVersion == null) {
             throw new ParsingException(
                     // CHECKSTYLE:OFF
                     "Could not extract YouTube WEB InnerTube client version from HTML search results page");
-                    // CHECKSTYLE:ON
+            // CHECKSTYLE:ON
         }
 
         keyAndVersionExtracted = true;
@@ -845,8 +854,33 @@ public final class YoutubeParsingHelper {
             musicClientName = Parser.matchGroup1(INNERTUBE_CLIENT_NAME_REGEX, html);
         }
 
-        youtubeMusicKey = new String[] {musicKey, musicClientName, musicClientVersion};
+        youtubeMusicKey = new String[]{musicKey, musicClientName, musicClientVersion};
         return youtubeMusicKey;
+    }
+
+    public static String[] getYoutubeTvKey() {
+        if (youtubeTvKey != null && youtubeTvKey.length == 2) {
+            return youtubeTvKey;
+        }
+
+        final String url = "https://www.youtube.com/tv";
+        final var headers = new HashMap<>(getCookieHeader());
+        headers.put("User-Agent", Collections.singletonList(YOUTUBE_TV_USER_AGENT));
+
+        try {
+            final String html = getDownloader().get(url, headers).responseBody();
+
+            final String tvApiKey =
+                    getStringResultFromRegexArray(html, INNERTUBE_API_KEY_REGEXES, 1);
+            final String tvClientVersion = getStringResultFromRegexArray(html,
+                    INNERTUBE_CONTEXT_CLIENT_VERSION_REGEXES, 1);
+
+            youtubeTvKey = new String[]{tvApiKey, tvClientVersion};
+            return youtubeTvKey;
+        } catch (final Exception exception) {
+            youtubeTvKey = HARDCODED_YOUTUBE_TV_KEY;
+            return youtubeTvKey;
+        }
     }
 
     @Nullable
@@ -908,7 +942,7 @@ public final class YoutubeParsingHelper {
             if (navigationEndpoint.getObject("watchEndpoint").has("startTimeSeconds")) {
                 url.append("&t=")
                         .append(navigationEndpoint.getObject("watchEndpoint")
-                        .getInt("startTimeSeconds"));
+                                .getInt("startTimeSeconds"));
             }
             return url.toString();
         }
@@ -1461,6 +1495,17 @@ public final class YoutubeParsingHelper {
     }
 
     /**
+     * Returns a {@link Map} containing the required YouTube TV headers.
+     */
+    @Nonnull
+    public static Map<String, List<String>> getYoutubeTvHeaders() {
+        return Map.of("Origin", Collections.singletonList("https://www.youtube.com"),
+                "Referer", Collections.singletonList(YOUTUBE_TV_URL),
+                "User-Agent", Collections.singletonList(YOUTUBE_TV_USER_AGENT),
+                "X-YouTube-Client-Version", Collections.singletonList(youtubeTvKey[1]));
+    }
+
+    /**
      * Returns a {@link Map} containing the required YouTube headers, including the
      * <code>CONSENT</code> cookie to prevent redirects to <code>consent.youtube.com</code>
      */
@@ -1497,7 +1542,7 @@ public final class YoutubeParsingHelper {
      * Returns an unmodifiable {@link Map} containing the {@code X-YouTube-Client-Name} and
      * {@code X-YouTube-Client-Version} headers.
      *
-     * @param name The X-YouTube-Client-Name value.
+     * @param name    The X-YouTube-Client-Name value.
      * @param version X-YouTube-Client-Version value.
      */
     private static Map<String, List<String>> getClientHeaders(@Nonnull final String name,
@@ -1508,6 +1553,7 @@ public final class YoutubeParsingHelper {
 
     /**
      * Create a map with the required cookie header.
+     *
      * @return A singleton map containing the header.
      */
     public static Map<String, List<String>> getCookieHeader() {
@@ -1833,6 +1879,7 @@ public final class YoutubeParsingHelper {
      * The track type is parsed from the {@code xtags} URL parameter
      * (Example: {@code acont=original:lang=en}).
      * </p>
+     *
      * @param streamUrl YouTube stream URL
      * @return {@link AudioTrackType} or {@code null} if no track type was found
      */

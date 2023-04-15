@@ -209,6 +209,11 @@ public abstract class StreamingService {
         return null;
     }
 
+    @Nullable
+    public FeedExtractor getSlowFeedExtractor(final String url) throws ExtractionException {
+        return null;
+    }
+
     /**
      * Must create a new instance of a KioskList implementation.
      *
