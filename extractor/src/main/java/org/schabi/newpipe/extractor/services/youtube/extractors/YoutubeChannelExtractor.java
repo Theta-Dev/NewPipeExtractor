@@ -114,12 +114,19 @@ public class YoutubeChannelExtractor extends ChannelExtractor {
     @Nonnull
     @Override
     public String getName() throws ParsingException {
-        try {
-            return initialData.getObject("header").getObject("c4TabbedHeaderRenderer")
-                    .getString("title");
-        } catch (final Exception e) {
-            throw new ParsingException("Could not get channel name", e);
+        String name = initialData.getObject("metadata").getObject("channelMetadataRenderer")
+                .getString("title");
+        if (name != null) {
+            return name;
         }
+
+        name = initialData.getObject("header").getObject("c4TabbedHeaderRenderer")
+                .getString("title");
+        if (name != null) {
+            return name;
+        }
+
+        throw new ParsingException("Could not get channel name");
     }
 
     @Override
@@ -249,8 +256,9 @@ public class YoutubeChannelExtractor extends ChannelExtractor {
                             final String url = getUrl();
                             tabs.add(0, new ReadyChannelTabListLinkHandler(tabUrl,
                                     redirectedChannelId, ChannelTabs.VIDEOS,
-                                    (service, linkHandler) -> new YoutubeChannelVideosTabExtractor(
-                                            service, linkHandler, tabRenderer, name, url)));
+                                    YoutubeChannelTabExtractor.fromTabData(getService(),
+                                            ChannelTabs.VIDEOS,
+                                            name, redirectedChannelId, url, tabRenderer)));
                             break;
                         case "playlists":
                             addTab.accept(ChannelTabs.PLAYLISTS);

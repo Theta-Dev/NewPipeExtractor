@@ -83,7 +83,7 @@ public class MediaCCCConferenceExtractor extends ChannelExtractor {
     @Override
     public List<ListLinkHandler> getTabs() throws ParsingException {
         return Collections.singletonList(new ReadyChannelTabListLinkHandler(getUrl(), getId(),
-                ChannelTabs.VIDEOS, this::buildEventsTabExtractor));
+                ChannelTabs.VIDEOS, buildEventsTabExtractor()));
     }
 
     @Override
@@ -104,9 +104,9 @@ public class MediaCCCConferenceExtractor extends ChannelExtractor {
         return conferenceData.getString("title");
     }
 
-    private ChannelTabExtractor buildEventsTabExtractor(final StreamingService service,
-                                                        final ListLinkHandler linkHandler) {
-        return new ChannelTabExtractor(service, linkHandler) {
+    private ChannelTabExtractor buildEventsTabExtractor() {
+        return new ChannelTabExtractor(getService(),
+                ((ListLinkHandler) getLinkHandler()).withContentFiler(ChannelTabs.VIDEOS)) {
             @Nonnull
             @Override
             public InfoItemsPage<InfoItem> getInitialPage() {
