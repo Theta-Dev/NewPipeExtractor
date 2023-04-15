@@ -148,7 +148,7 @@ public class BandcampService extends StreamingService {
     @Override
     public ChannelTabExtractor getChannelTabExtractor(final ListLinkHandler linkHandler) {
         if (linkHandler instanceof ReadyChannelTabListLinkHandler) {
-            return ((ReadyChannelTabListLinkHandler) linkHandler).getChannelTabExtractor(this);
+            return ((ReadyChannelTabListLinkHandler) linkHandler).getChannelTabExtractor();
         } else {
             return new BandcampChannelTabExtractor(this, linkHandler);
         }

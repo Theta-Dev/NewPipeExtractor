@@ -33,6 +33,10 @@ public class ListLinkHandler extends LinkHandler {
                 "");
     }
 
+    public ListLinkHandler withContentFiler(final String filter) {
+        return new ListLinkHandler(originalUrl, url, id, Collections.singletonList(filter), "");
+    }
+
     public List<String> getContentFilters() {
         return contentFilters;
     }

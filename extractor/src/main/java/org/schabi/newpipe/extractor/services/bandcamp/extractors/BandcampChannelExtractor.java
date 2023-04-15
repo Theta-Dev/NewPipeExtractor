@@ -120,7 +120,7 @@ public class BandcampChannelExtractor extends ChannelExtractor {
 
         final List<ListLinkHandler> tabs = new ArrayList<>();
         tabs.add(new ReadyChannelTabListLinkHandler(getUrl(), getId(),
-                ChannelTabs.TRACKS, this::buildTracksTabExtractor));
+                ChannelTabs.TRACKS, buildTracksTabExtractor()));
 
         if (discography.stream().anyMatch(o -> (
                 (JsonObject) o).getString("item_type").equals("album"))) {
@@ -144,9 +144,9 @@ public class BandcampChannelExtractor extends ChannelExtractor {
         return channelInfo.getString("name");
     }
 
-    private ChannelTabExtractor buildTracksTabExtractor(final StreamingService service,
-                                                        final ListLinkHandler linkHandler) {
-        return new ChannelTabExtractor(service, linkHandler) {
+    private ChannelTabExtractor buildTracksTabExtractor() {
+        return new ChannelTabExtractor(getService(),
+                ((ListLinkHandler) getLinkHandler()).withContentFiler(ChannelTabs.TRACKS)) {
             @Nonnull
             @Override
             public InfoItemsPage<InfoItem> getInitialPage() throws ExtractionException {

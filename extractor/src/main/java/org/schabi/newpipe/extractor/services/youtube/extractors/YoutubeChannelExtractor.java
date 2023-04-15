@@ -249,8 +249,8 @@ public class YoutubeChannelExtractor extends ChannelExtractor {
                             final String url = getUrl();
                             tabs.add(0, new ReadyChannelTabListLinkHandler(tabUrl,
                                     redirectedChannelId, ChannelTabs.VIDEOS,
-                                    (service, linkHandler) -> new YoutubeChannelVideosTabExtractor(
-                                            service, linkHandler, tabRenderer, name, url)));
+                                    new YoutubeChannelVideosTabExtractor(getService(),
+                                            tabRenderer, name, redirectedChannelId, url)));
                             break;
                         case "playlists":
                             addTab.accept(ChannelTabs.PLAYLISTS);

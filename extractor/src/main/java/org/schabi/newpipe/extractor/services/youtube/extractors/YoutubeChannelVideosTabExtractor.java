@@ -18,12 +18,14 @@ import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
 import org.schabi.newpipe.extractor.downloader.Downloader;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
+import org.schabi.newpipe.extractor.linkhandler.ChannelTabs;
 import org.schabi.newpipe.extractor.linkhandler.ListLinkHandler;
 import org.schabi.newpipe.extractor.localization.TimeAgoParser;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -35,11 +37,12 @@ public class YoutubeChannelVideosTabExtractor extends ChannelTabExtractor {
     private final String channelUrl;
 
     public YoutubeChannelVideosTabExtractor(final StreamingService service,
-                                            final ListLinkHandler linkHandler,
                                             final JsonObject tabRenderer,
                                             final String channelName,
+                                            final String channelId,
                                             final String channelUrl) {
-        super(service, linkHandler);
+        super(service, new ListLinkHandler(channelUrl, channelUrl, channelId,
+                Collections.singletonList(ChannelTabs.VIDEOS), ""));
         this.tabRenderer = tabRenderer;
         this.channelName = channelName;
         this.channelUrl = channelUrl;
