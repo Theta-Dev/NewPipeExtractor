@@ -155,17 +155,14 @@ public class YoutubeChannelTabExtractor extends ChannelTabExtractor {
         }
     }
 
-    private String getChannelName() throws ParsingException {
+    @Nonnull
+    private String getChannelName() {
         if (channelName != null) {
             return channelName;
         }
 
-        try {
-            return initialData.getObject("header").getObject("c4TabbedHeaderRenderer")
-                    .getString("title");
-        } catch (final Exception e) {
-            throw new ParsingException("Could not get channel name", e);
-        }
+        return initialData.getObject("header").getObject("c4TabbedHeaderRenderer")
+                .getString("title", "");
     }
 
     @Nonnull
