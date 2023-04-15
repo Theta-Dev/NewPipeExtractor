@@ -161,8 +161,15 @@ public class YoutubeChannelTabExtractor extends ChannelTabExtractor {
             return channelName;
         }
 
-        return initialData.getObject("header").getObject("c4TabbedHeaderRenderer")
+        channelName = initialData.getObject("metadata").getObject("channelMetadataRenderer")
+                .getString("title");
+        if (channelName != null) {
+            return channelName;
+        }
+
+        channelName = initialData.getObject("header").getObject("c4TabbedHeaderRenderer")
                 .getString("title", "");
+        return channelName;
     }
 
     @Nonnull
