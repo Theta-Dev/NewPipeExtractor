@@ -121,7 +121,7 @@ public class YouTubeSlowFeedExtractor extends FeedExtractor {
                 .getObject("tvSurfaceHeaderRenderer")
                 .getObject("title"));
         if (isNullOrEmpty(name)) {
-            throw new ParsingException("Could not get channel name for " + channelId);
+            return "";
         }
         return name;
     }
