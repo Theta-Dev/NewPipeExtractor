@@ -87,7 +87,7 @@ public class MediaCCCService extends StreamingService {
 
     @Override
     public ChannelTabExtractor getChannelTabExtractor(final ListLinkHandler linkHandler) {
-        return ((ReadyChannelTabListLinkHandler) linkHandler).getChannelTabExtractor();
+        return ((ReadyChannelTabListLinkHandler) linkHandler).getChannelTabExtractor(this);
     }
 
     @Override

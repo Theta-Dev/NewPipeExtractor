@@ -37,39 +37,17 @@ import static org.schabi.newpipe.extractor.services.youtube.YouTubeChannelHelper
 import static org.schabi.newpipe.extractor.utils.Utils.isNullOrEmpty;
 
 public class YoutubeChannelTabExtractor extends ChannelTabExtractor {
-    private final boolean isPlaylist;
-    @Nullable
+    private final boolean usePlaylist;
     private JsonObject initialData;
 
     private String channelId;
     @Nullable
     private String visitorData;
 
-    // Already fetched tab data
-    @Nullable
-    private JsonObject tabData;
-    @Nullable
-    private String channelName;
-
     public YoutubeChannelTabExtractor(final StreamingService service,
                                       final ListLinkHandler linkHandler) {
         super(service, linkHandler);
-        isPlaylist = getTab().equals(ChannelTabs.SHORTS);
-    }
-
-    public static YoutubeChannelTabExtractor fromTabData(final StreamingService service,
-                                                         final String tab,
-                                                         final String channelName,
-                                                         final String channelId,
-                                                         final String url,
-                                                         final JsonObject tabData) {
-        final YoutubeChannelTabExtractor extractor =
-                new YoutubeChannelTabExtractor(service, new ListLinkHandler(
-                        url, url, channelId, Collections.singletonList(tab), ""));
-        extractor.channelId = channelId;
-        extractor.channelName = channelName;
-        extractor.tabData = tabData;
-        return extractor;
+        usePlaylist = getTab().equals(ChannelTabs.SHORTS);
     }
 
     private String getParams() throws ParsingException {
@@ -89,14 +67,9 @@ public class YoutubeChannelTabExtractor extends ChannelTabExtractor {
     @Override
     public void onFetchPage(@Nonnull final Downloader downloader) throws IOException,
             ExtractionException {
-        // Extractor was constructed with pre-fetched tab data
-        if (tabData != null) {
-            return;
-        }
-
         channelId = resolveChannelId(super.getId());
 
-        if (isPlaylist) {
+        if (usePlaylist) {
             // Get shorts from YouTube's internal playlist (ID: UUSH + channel id without UC prefix)
             if (!channelId.startsWith("UC")) {
                 throw new ParsingException("channel ID does not start with 'UC'");
@@ -138,7 +111,7 @@ public class YoutubeChannelTabExtractor extends ChannelTabExtractor {
     @Nonnull
     @Override
     public String getId() throws ParsingException {
-        if (initialData != null && !isPlaylist) {
+        if (!usePlaylist) {
             final String id = initialData.getObject("header")
                     .getObject("c4TabbedHeaderRenderer")
                     .getString("channelId", "");
@@ -155,21 +128,17 @@ public class YoutubeChannelTabExtractor extends ChannelTabExtractor {
         }
     }
 
-    @Nonnull
-    private String getChannelName() {
-        if (channelName != null) {
-            return channelName;
-        }
-
-        channelName = initialData.getObject("metadata").getObject("channelMetadataRenderer")
+    protected String getChannelName() {
+        final String mdName = initialData
+                .getObject("metadata")
+                .getObject("channelMetadataRenderer")
                 .getString("title");
-        if (channelName != null) {
-            return channelName;
+        if (!isNullOrEmpty(mdName)) {
+            return mdName;
         }
 
-        channelName = initialData.getObject("header").getObject("c4TabbedHeaderRenderer")
+        return initialData.getObject("header").getObject("c4TabbedHeaderRenderer")
                 .getString("title", "");
-        return channelName;
     }
 
     @Nonnull
@@ -178,7 +147,7 @@ public class YoutubeChannelTabExtractor extends ChannelTabExtractor {
         final MultiInfoItemsCollector collector = new MultiInfoItemsCollector(getServiceId());
 
         JsonArray items = new JsonArray();
-        if (initialData != null && isPlaylist) {
+        if (usePlaylist) {
             final JsonArray contents = initialData.getObject("contents")
                     .getObject("twoColumnBrowseResultsRenderer")
                     .getArray("tabs")
@@ -226,7 +195,7 @@ public class YoutubeChannelTabExtractor extends ChannelTabExtractor {
         // If a channel tab is fetched, the next page requires channel ID and name,
         // since channel videos dont have their channel specified.
         final List<String> channelIds;
-        if (isPlaylist) {
+        if (usePlaylist) {
             channelIds = Collections.emptyList();
         } else {
             channelIds = List.of(getChannelName(), getUrl());
@@ -265,11 +234,7 @@ public class YoutubeChannelTabExtractor extends ChannelTabExtractor {
                 getNextPageFrom(continuation, channelIds));
     }
 
-    private Optional<JsonObject> getTabData() throws ParsingException {
-        if (tabData != null) {
-            return Optional.of(tabData);
-        }
-
+    Optional<JsonObject> getTabData() throws ParsingException {
         final String urlSuffix = YoutubeChannelTabLinkHandlerFactory.getUrlSuffix(getTab());
 
         final JsonArray tabs = initialData.getObject("contents")
@@ -387,5 +352,43 @@ public class YoutubeChannelTabExtractor extends ChannelTabExtractor {
 
         return new Page(YOUTUBEI_V1_URL + "browse?key=" + getKey()
                 + DISABLE_PRETTY_PRINT_PARAMETER, null, channelIds, null, body);
+    }
+
+    public static class VideoTabExtractor extends YoutubeChannelTabExtractor {
+        private final JsonObject tabRenderer;
+        private final String channelName;
+        private final String channelUrl;
+
+        VideoTabExtractor(final StreamingService service,
+                          final ListLinkHandler linkHandler,
+                          final JsonObject tabRenderer,
+                          final String channelName,
+                          final String channelUrl) {
+            super(service, linkHandler);
+            this.tabRenderer = tabRenderer;
+            this.channelName = channelName;
+            this.channelUrl = channelUrl;
+        }
+
+        @Override
+        public void onFetchPage(@Nonnull final Downloader downloader) {
+            // nothing to do, all data was already fetched and is stored in the link handler
+        }
+
+        @Nonnull
+        @Override
+        public String getUrl() throws ParsingException {
+            return channelUrl;
+        }
+
+        @Override
+        protected String getChannelName() {
+            return channelName;
+        }
+
+        @Override
+        Optional<JsonObject> getTabData() {
+            return Optional.of(tabRenderer);
+        }
     }
 }

@@ -120,7 +120,7 @@ public class YoutubeService extends StreamingService {
     @Override
     public ChannelTabExtractor getChannelTabExtractor(final ListLinkHandler linkHandler) {
         if (linkHandler instanceof ReadyChannelTabListLinkHandler) {
-            return ((ReadyChannelTabListLinkHandler) linkHandler).getChannelTabExtractor();
+            return ((ReadyChannelTabListLinkHandler) linkHandler).getChannelTabExtractor(this);
         } else {
             return new YoutubeChannelTabExtractor(this, linkHandler);
         }
